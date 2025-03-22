@@ -1,5 +1,24 @@
 const views = {
-    list({cars, title}) {
+    form(car) {
+        let action = '/cars', make = '', model = '';
+
+        if (car) {
+            action = `/cars/${car.id}`;
+            make = car.make;
+            model = car.model;
+        }
+
+        return this._layout(
+            `
+            <form action="${action}" method="post">
+                <input type="text" name="make" placeholder="Make" value="${make}" />
+                <input type="text" name="model" placeholder="Model" value="${model}" />
+                <button type="submit">Save</button>
+            </form>
+            `
+        )
+    },    
+    list({cars, title}) {  
         const liElements = cars.map(({id, make, model}) => `<li><a href="/cars/${id}">${make} ${model}</a></li>`);
         return this._layout(
             `

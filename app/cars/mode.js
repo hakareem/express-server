@@ -21,3 +21,26 @@ export function getByMake(make) {
 
     return Promise.resolve(car);
 }
+
+export function addCar(make, model) {
+    const id = cars.length + 1;
+    const car = {id, make, model}
+
+    cars.push(car)
+
+    return Promise.resolve(car);
+}
+
+export function saveCar() {
+    return Promise.resolve(true);
+}
+
+export function removeCar(id) {
+    const index = cars.findIndex((car) => car.id == id);
+
+    if (index > -1) {
+        cars.splice(index, 1);
+    }
+
+    return Promise.resolve(true);
+}
