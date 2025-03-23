@@ -1,3 +1,15 @@
+import mongoose from "mongoose";
+
+const carSchema = new mongoose.Schema({
+    make: String,
+    model: String,
+    make_lower: String
+});
+
+const Car = mongoose.model('Car', carSchema);
+
+const car = new Car({ make: 'Lamborghini', model: 'Urus', make_lower: 'lamborghini' });
+
 const cars = [
     {id: 1, make:'Lamborghini', model:'Urus' },
     {id: 2, make:'RollsRoyce', model:'Phantom' },
@@ -6,41 +18,34 @@ const cars = [
     {id: 5, make:'Buggati', model:'Chiron' },
 ]
 
-export function getAll() {
-    return Promise.resolve(cars)
+export async function getAll() {
+    return await Car.find();
 }
 
-export function getById(id) {
-    const car = cars.find((car) => car.id == id);
-
-    return Promise.resolve(car);
+export async function getById(id) {
+    return await Car.findById(id);
 }
 
-export function getByMake(make) {
-    const car = cars.filter((car) => car.make.toLowerCase() == make.toLowerCase());
-
-    return Promise.resolve(car);
+export async function getByMake(make) {
+    return await Car.find({ make_lower: make.toLowerCase() });
 }
 
-export function addCar(make, model) {
-    const id = cars.length + 1;
-    const car = {id, make, model}
-
-    cars.push(car)
-
-    return Promise.resolve(car);
+export async function addCar(make, model) {
+   return await Car.create({ make, model, make_lower: make.toLowerCase() });
 }
 
-export function saveCar() {
-    return Promise.resolve(true);
-}
+export async function saveCar(id, make, model) {
+    const car = await getById(id);
 
-export function removeCar(id) {
-    const index = cars.findIndex((car) => car.id == id);
+    if(car) {
+        car.make = make;
+        car.model = model;
+        car.make_lower = make.toLowerCase;
 
-    if (index > -1) {
-        cars.splice(index, 1);
+        return car.save();
     }
+}
 
-    return Promise.resolve(true);
+export async function removeCar(id) {
+    return await Car.findByIdAndDelete(id);
 }

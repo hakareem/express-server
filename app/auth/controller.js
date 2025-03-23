@@ -1,8 +1,11 @@
+import { compareHash } from './crypt.js';
+import { User } from './model.js';
+
 export function showLogin(req, res) {
     res.render('auth/login', {title: 'Login'});
 }
 
-export function authenticate(req, res) {
+export async function authenticate(req, res) {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -10,9 +13,16 @@ export function authenticate(req, res) {
         return;
     }
 
-    if(email.toLowerCase() === 'admin@gmail.com' && password === 'x') {
+    const user = await User.findOne({email: email.toLowerCase()});
+
+    if (!user) {
+        res.redirect('/login');
+        return;
+    }
+
+    if(await compareHash(password, user.password)) {
         req.session.user = {
-            email: email,
+            email,
             isAuthenticated: true
         };
         res.redirect('/cars');

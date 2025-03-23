@@ -1,14 +1,13 @@
 import { getAll, getById, getByMake, addCar, saveCar, removeCar } from "./mode.js";
-import { view } from "./view.js";
 
 export async function createCar(req, res) { 
-    res.render('/cars/form')
+    res.render('cars/form')
 }
 
 export const editCar = async (req, res) => {
-    const id = parseInt(req.params.id, 10);
+    const id = req.params.id;
 
-    if (!id) {
+    if (!isIdValid(id)) {
         res.send(404);
         return;
     }
@@ -20,33 +19,40 @@ export const editCar = async (req, res) => {
         return;
     }
 
-    res.send(
-        view('form', car)
-    )
+    res.render('cars/form', { car: convertToObj(car) });
 }
 
 export async function listCars(req, res) {
     const cars = await getAll()
-    res.render('cars/list', {cars, title: 'All Cars'})
+    res.render('cars/list', {
+        cars: cars.map((car) => (convertToObj(car))),
+        title: 'All Cars'
+    })
 }
 
 export async function carPage(req, res) {
-    const id = parseInt(req.params.id, 10);
+    const id = req.params.id;
     
-    if (id) {
+    if (isIdValid(id)) {
         const car = await getById(id)
 
         if (!car) {
             res.send(404);
         } else {
-            res.render('cars/show', {car, title: `${car.make} ${car.model}`});
+            res.render('cars/show', {
+                car: convertToObj(car),
+                title: `${car.make} ${car.model}`
+            });
         }
     } else {
         const found = await getByMake(req.params.id)
         if (found.length === 0) {
-            res.send(404);
+            res.sendStatus(404);
         } else {
-            res.render('cars/list', {cars: found, title: `Cars made by ${found[0].make}`});
+            res.render('cars/list', {
+                cars: found.map((car) => (convertToObj(car))),
+                title: `Cars made by ${found[0].make}`
+            });
         }
     }
 }
@@ -63,16 +69,9 @@ export async function storeCar(req, res) {
 }
 
 export async function updateCar(req, res) {
-    const id = parseInt(req.params.id, 10);
+    const id = req.params.id;
     
-    if (!id) {
-        res.send(404);
-        return;
-    }
-
-    const car = await getById(id);
-
-    if (!car) {
+    if (!isIdValid(id)) {
         res.send(404);
         return;
     }
@@ -80,10 +79,7 @@ export async function updateCar(req, res) {
     const {make, model} = req.body;
 
     if (make && model) {
-        car.make = make;
-        car.model = model;
-
-        await saveCar(car);
+        await saveCar(id, make, model);
         res.redirect(`/cars/${id}`)
     } else {
         res.redirect(`/cars/${id}/edit`)
@@ -91,20 +87,25 @@ export async function updateCar(req, res) {
 }
 
 export async function deleteCar(req, res) {
-    const id = parseInt(req.params.id, 10);
+    const id = req.params.id;
     
-    if (!id) {
-        res.send(404);
-        return;
-    }
-
-    const car = await getById(id);
-
-    if (!car) {
+    if (!isIdValid(id)) {
         res.send(404);
         return;
     }
 
     await removeCar(id);
     res.redirect('/cars')
+}
+
+function convertToObj(car) {
+    return {
+        id: car._id,
+        make: car.make,
+        model: car.model
+    }
+}
+
+function isIdValid(id) {
+    return id.length === 24;
 }
